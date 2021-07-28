@@ -31,8 +31,7 @@ public class UploadController {
         File cacheFile = null;
         BufferedWriter writer1 = null;
         try {
-            System.out.println("Oriname:" + file.getOriginalFilename());
-
+            // Convert MultipartFile to File
             cacheFile = File.createTempFile(file.getOriginalFilename(), ".xlsx");
             file.transferTo(cacheFile);
 
