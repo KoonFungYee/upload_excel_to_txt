@@ -4,10 +4,15 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.common.collect.Maps;
 
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -16,6 +21,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -27,6 +33,7 @@ public class UploadController {
     }
 
     @RequestMapping(value = "/uploadFile", method = { RequestMethod.POST, RequestMethod.GET })
+    @ResponseBody
     public void uploadFile(MultipartFile file, HttpServletRequest request, HttpServletResponse response) {
         File cacheFile = null;
         BufferedWriter writer1 = null;
@@ -168,6 +175,38 @@ public class UploadController {
                 e.printStackTrace();
             }
         }
+    }
 
+    @RequestMapping(value = "/getExcelValue")
+    public String getExcelValue() {
+        return "excelValue";
+    }
+
+    @RequestMapping(value = "/getExcelValueData", method = { RequestMethod.POST, RequestMethod.GET })
+    @ResponseBody
+    public Map<String, Object> getExcelValueData(MultipartFile file, HttpServletResponse response) {
+        File cacheFile = null;
+        try {
+            String fileName = file.getOriginalFilename();
+            System.out.println(fileName);
+
+            String[] endStr = { ".xls", ".xlsx" };
+            cacheFile = FileUtil.uploadImportFile(file, endStr);
+
+            SampleFileExcelCallBack callback = new SampleFileExcelCallBack();
+            List<String> errList = new ArrayList<String>();
+            ExcelHelper.importExcel(cacheFile, cacheFile.getName().endsWith(".xlsx"), callback);
+
+            errList.addAll(callback.getErrList());
+            List<SampleFileData> fileDatas = (List<SampleFileData>) callback.getResult();
+            for (int i = 0; i < fileDatas.size(); i++) {
+                System.out.println("Name " + i + " : " + fileDatas.get(i).getName());
+                System.out.println("Amount " + i + " : " + fileDatas.get(i).getAmount());
+            }
+            System.out.println(errList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
